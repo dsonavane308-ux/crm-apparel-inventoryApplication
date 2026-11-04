@@ -1,0 +1,16 @@
+cat << 'EOF' > .gitignore
+# Spring Boot / Maven
+target/
+.mvn/
+.idea/
+*.iml
+*.log
+
+# React Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Local Database Backups & Environment
+backups/
+.env
+EOF
