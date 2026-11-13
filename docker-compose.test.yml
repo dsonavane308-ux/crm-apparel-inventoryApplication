@@ -1,0 +1,39 @@
+version: '3.8'
+services:
+  test-db:
+    image: postgres:16-alpine
+    container_name: crm_test_db
+    environment:
+      POSTGRES_DB: shop_test_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - test_db_data:/var/lib/postgresql/data
+
+  test-backend:
+    build: .
+    container_name: crm_test_backend
+    ports:
+      - "8082:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://test-db:5432/shop_test_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_PROFILES_ACTIVE: test
+    depends_on:
+      - test-db
+
+  test-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: crm_test_frontend
+    ports:
+      - "5174:5173"
+    depends_on:
+      - test-backend
+
+volumes:
+  test_db_data:
