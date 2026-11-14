@@ -1,0 +1,25 @@
+FROM jenkins/jenkins:lts
+
+USER root
+
+# Install essential tools, Git, and Maven
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    maven \
+    docker.io \
+    && rm -rf /var/lib/apt/lists/*
+
+# Configure Git safe directory to prevent ownership permission blocks
+RUN git config --global --add safe.directory '*'
+
+# Install Docker Compose V2 official binary as a Docker CLI plugin
+RUN mkdir -p /usr/lib/docker/cli-plugins && \
+    curl -SL https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose && \
+    chmod +x /usr/local/bin/docker-compose && \
+    ln -s /usr/local/bin/docker-compose /usr/lib/docker/cli-plugins/docker-compose
+
+# Grant jenkins user access to docker group
+RUN usermod -aG docker jenkins
+
+USER jenkins
