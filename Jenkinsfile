@@ -3,31 +3,31 @@ pipeline {
     
     stages {
         stage('Validate Jira Ticket in Branch Name') {
-    steps {
-        script {
-            def branchName = env.BRANCH_NAME ?: env.GIT_BRANCH ?: ''
-            echo "Validating branch/PR name: ${branchName}"
-            
-            // Allow main and master branches to bypass Jira naming convention
-            if (branchName == 'main' || branchName == 'master') {
-                echo "✅ Protected branch '${branchName}' detected. Bypassing Jira ticket validation."
-            } else {
-                def jiraRegex = /^(feature|bugfix|hotfix)\/[A-Z]+-\d+-.+$/
-                
-                if (!(branchName ==~ jiraRegex)) {
-                    currentBuild.result = 'FAILURE'
-                    error("❌ BUILD FAILED: Branch name '${branchName}' does not comply with standards! Must follow: feature/PROJ-123-short-description")
-                } else {
-                    echo "✅ Jira ticket validation passed for branch: ${branchName}"
+            steps {
+                script {
+                    def branchName = env.BRANCH_NAME ?: env.GIT_BRANCH ?: ''
+                    echo "Validating branch/PR name: ${branchName}"
+                    
+                    // Allow main and master branches to bypass Jira naming convention
+                    if (branchName == 'main' || branchName == 'master') {
+                        echo "✅ Protected branch '${branchName}' detected. Bypassing Jira ticket validation."
+                    } else {
+                        def jiraRegex = /^(feature|bugfix|hotfix)\/[A-Z]+-\d+-.+$/
+                        
+                        if (!(branchName ==~ jiraRegex)) {
+                            currentBuild.result = 'FAILURE'
+                            error("❌ BUILD FAILED: Branch name '${branchName}' does not comply with standards! Must follow: feature/PROJ-123-short-description")
+                        } else {
+                            echo "✅ Jira ticket validation passed for branch: ${branchName}"
+                        }
+                    }
                 }
             }
         }
-    }
-}
         
         stage('Build & Unit Test') {
             steps {
-                sh 'mvn clean test-compile'
+                sh 'mvn clean test'
             }
         }
         
@@ -67,6 +67,9 @@ pipeline {
     
     post {
         always {
+            echo "Cleaning up local environment containers..."
+            sh 'docker compose down || true'
+            sh 'docker compose -f docker-compose.test.yml down || true'
             echo "Pipeline execution finished."
         }
         success {
